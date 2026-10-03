@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Treino da semana</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Treino">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ECEEF0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#11171D" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#ECEEF0; --surface:#F9FAFB; --ink:#17202A; --muted:#55616E; --rule:#CCD2D8; --steel:#9AA5B0;
+  --azul:#1F5FB4; --azul-on:#FFFFFF;
+  --verm:#C4313B; --verm-on:#FFFFFF;
+  --amar:#E3AA06; --amar-on:#17202A;
+  --verde:#2A8754; --verde-on:#FFFFFF;
+  --display:"Barlow Condensed","Roboto Condensed","Arial Narrow",sans-serif;
+  --text:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#11171D; --surface:#19212A; --ink:#E9EDF0; --muted:#98A4B0; --rule:#2A3541; --steel:#5C6976;
+    --azul:#5A9BEE; --azul-on:#0D1319;
+    --verm:#EE6A75; --verm-on:#0D1319;
+    --amar:#F1C232; --amar-on:#0D1319;
+    --verde:#4CBB80; --verde-on:#0D1319;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11171D; --surface:#19212A; --ink:#E9EDF0; --muted:#98A4B0; --rule:#2A3541; --steel:#5C6976;
+  --azul:#5A9BEE; --azul-on:#0D1319;
+  --verm:#EE6A75; --verm-on:#0D1319;
+  --amar:#F1C232; --amar-on:#0D1319;
+  --verde:#4CBB80; --verde-on:#0D1319;
+}
+[data-foco="puxar"]{--c:var(--azul);--c-on:var(--azul-on)}
+[data-foco="empurrar"]{--c:var(--verm);--c-on:var(--verm-on)}
+[data-foco="ombros"]{--c:var(--amar);--c-on:var(--amar-on)}
+[data-foco="pernas"]{--c:var(--verde);--c-on:var(--verde-on)}
+[data-foco]{--c-soft:color-mix(in srgb,var(--c) 30%,var(--surface))}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1rem/1.5 var(--text)}
+main{max-width:36rem;margin:0 auto;padding:1.25rem 1rem 3rem;overflow-x:hidden}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+
+.app-name{font:600 1.05rem/1 var(--display);letter-spacing:.02em;margin:0;color:var(--muted)}
+
+/* A semana como anilhas numa barra */
+.week{--plate:clamp(2.5rem,11vw,3.25rem);position:relative;display:flex;justify-content:space-between;align-items:flex-start;margin:1.25rem 0 2rem;padding:0 .2rem}
+.week::before{content:"";position:absolute;left:-1rem;right:-1rem;top:calc(var(--plate)/2 - 3px);height:6px;background:var(--steel)}
+.dia{appearance:none;border:0;background:none;padding:0;display:grid;justify-items:center;gap:.5rem;cursor:pointer;position:relative;z-index:1;animation:encaixa .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*45ms)}
+.plate{width:var(--plate);height:var(--plate);border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--c) calc(var(--p,0)*1%),var(--c-soft) 0);transition:transform .18s ease}
+.plate b{width:calc(var(--plate) - 12px);height:calc(var(--plate) - 12px);border-radius:50%;background:var(--surface);display:grid;place-items:center;font:700 1.1rem/1 var(--display);font-variant-numeric:tabular-nums}
+.dia.feito .plate b{background:var(--c);color:var(--c-on)}
+.dia[aria-current="true"] .plate{transform:scale(1.16);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ink)}
+.dia-nome{font-size:.85rem;line-height:1;color:var(--muted)}
+.dia.hoje .dia-nome{color:var(--ink);font-weight:600}
+.dia:focus-visible{outline:none}
+.dia:focus-visible .plate{box-shadow:0 0 0 2px var(--bg),0 0 0 5px var(--ink)}
+@keyframes encaixa{from{transform:translateX(3.5rem);opacity:0}to{transform:none;opacity:1}}
+
+/* Cabeçalho do dia */
+.day{border-left:8px solid var(--c);padding-left:.8rem}
+.day-when{margin:0;color:var(--muted);font-weight:500}
+.day-title{font:700 clamp(2.6rem,12.5vw,4rem)/.92 var(--display);margin:.2rem 0 .6rem;text-wrap:balance}
+.day-meta{margin:0;color:var(--muted);max-width:34rem}
+.progress{margin:1.1rem 0 0}
+.bar{height:8px;background:var(--c-soft)}
+.bar i{display:block;height:100%;width:var(--w,0%);background:var(--c);transition:width .25s ease}
+.progress p{margin:.4rem 0 0;font-weight:500}
+
+/* Exercícios */
+.grupo{font:600 1.45rem/1.1 var(--display);margin:2.25rem 0 0;padding-bottom:.35rem;border-bottom:2px solid var(--ink)}
+.lista{list-style:none;margin:0;padding:0}
+.ex{padding:1.05rem 0 .6rem;border-bottom:1px solid var(--rule)}
+.ex-head{display:grid;grid-template-columns:2rem 1fr;gap:.5rem;align-items:baseline}
+.ex-n{font:700 1.5rem/1 var(--display);color:var(--muted);font-variant-numeric:tabular-nums}
+.ex-nome{font:600 1.125rem/1.25 var(--text);margin:0}
+.ex-meta{margin:.15rem 0 0;color:var(--muted);font-size:.95rem}
+.ex-work{display:flex;flex-wrap:wrap;gap:.75rem 1rem;align-items:center;margin:.8rem 0 0}
+.load{display:flex;align-items:center;gap:.4rem;color:var(--muted);font-size:.95rem}
+.load input{width:4.25rem;height:2.75rem;border:2px solid var(--steel);border-radius:6px;background:var(--surface);color:var(--ink);font:700 1.3rem/1 var(--display);text-align:center;padding:0 .25rem}
+.load input::placeholder{color:var(--steel);font-weight:600}
+.load input:focus-visible{outline-offset:1px}
+.sets{display:flex;gap:.4rem;margin-left:auto}
+.set{width:2.75rem;height:2.75rem;border-radius:50%;border:2px solid var(--steel);background:transparent;font:700 1.2rem/1 var(--display);cursor:pointer;padding:0;transition:background .12s,border-color .12s}
+.set[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:var(--c-on)}
+.set.unica{width:auto;border-radius:1.4rem;padding:0 1rem;font:600 1rem/1 var(--text)}
+.ex details{margin-top:.35rem}
+.ex summary,.extras summary{cursor:pointer;color:var(--muted);font-size:.95rem;padding:.55rem 0}
+.ex details p{margin:0 0 .5rem;max-width:34rem}
+@media (min-width:30rem){
+  .ex-work,.ex details{margin-left:2.5rem}
+}
+
+/* Rodapé */
+.extras{margin-top:2.75rem}
+.extras h2{font:600 1.45rem/1.1 var(--display);margin:0 0 .25rem}
+.extras summary{font-size:1rem;color:var(--ink);font-weight:500;border-bottom:1px solid var(--rule)}
+.extras ul{margin:.75rem 0 1rem;padding-left:1.1rem;max-width:34rem}
+.extras li{margin:.45rem 0}
+.ajustes{display:grid;gap:.75rem;margin-top:1.5rem;justify-items:start}
+.ajustes label{display:flex;gap:.6rem;align-items:center;min-height:2.75rem;cursor:pointer}
+.ajustes input[type=checkbox]{width:1.35rem;height:1.35rem;accent-color:var(--ink)}
+.btn{min-height:2.75rem;padding:0 1rem;border:2px solid var(--steel);border-radius:6px;background:transparent;font-weight:500;cursor:pointer}
+.btn.confirma{border-color:var(--verm);color:var(--verm)}
+.status{margin:1.5rem 0 0;color:var(--muted);font-size:.9rem}
+
+.instalar{margin:1rem 0 0;padding:.85rem 1rem;border:2px solid var(--ink);border-radius:6px;display:grid;gap:.6rem;justify-items:start}
+.instalar[hidden],.restaurar[hidden]{display:none}
+.instalar p{margin:0}
+.restaurar{display:grid;gap:.5rem;justify-items:start;width:100%}
+.restaurar textarea{width:100%;border:2px solid var(--steel);border-radius:6px;background:var(--surface);color:var(--ink);font:400 1rem/1.4 var(--text);padding:.5rem}
+.backup-msg{margin:0;font-weight:500}
+.backup-msg:empty{display:none}
+
+/* Cronômetro de descanso */
+body.com-timer main{padding-bottom:8rem}
+.timer{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--ink);color:var(--bg);padding:.85rem 1rem calc(.85rem + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:.6rem;align-items:center}
+.timer[hidden]{display:none}
+.timer-fill{position:absolute;left:0;top:0;height:5px;width:var(--w,100%);background:var(--c)}
+.timer-clock{display:block;font:700 2.6rem/1 var(--display);font-variant-numeric:tabular-nums}
+.timer-next{display:block;font-size:.9rem;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.15rem}
+.timer button{min-height:2.75rem;padding:0 .9rem;border:2px solid currentColor;border-radius:6px;background:transparent;font-weight:600;cursor:pointer;white-space:nowrap}
+.timer button:focus-visible{outline-color:var(--bg)}
+.timer.fim{background:var(--c);color:var(--c-on)}
+.timer.fim .timer-fill{display:none}
+
+@media (prefers-reduced-motion:reduce){
+  .dia{animation:none}
+  .plate,.bar i,.set{transition:none}
+}
+</style>
+</head>
+<body>
+<main id="app">
+  <h1 class="app-name">Treino da semana</h1>
+  <aside class="instalar" id="instalar" hidden>
+    <p>Para instalar no iPhone, toque em Compartilhar no Safari e depois em Adicionar à Tela de Início.</p>
+    <button class="btn" id="fecharInstalar" type="button">Entendi</button>
+  </aside>
+  <nav class="week" id="week" aria-label="Dias da semana"></nav>
+
+  <section class="day" aria-live="polite">
+    <p class="day-when" id="quando"></p>
+    <h2 class="day-title" id="titulo"></h2>
+    <p class="day-meta" id="meta"></p>
+    <div class="progress">
+      <div class="bar" aria-hidden="true"><i id="barra"></i></div>
+      <p id="progresso"></p>
+    </div>
+  </section>
+
+  <div id="lista"></div>
+
+  <section class="extras">
+    <h2>Para o treino render</h2>
+    <details>
+      <summary>Como progredir nas cargas</summary>
+      <ul>
+        <li>Fique dentro da faixa de repetições. Quando fechar todas as séries no topo da faixa com boa técnica, suba a carga de 2 a 5% no treino seguinte.</li>
+        <li>Termine cada série a 1 ou 2 repetições da falha. Com cinco exercícios por grupo, guarde a falha para a última série do último exercício de cada grupo.</li>
+        <li>Controle a descida em 2 a 3 segundos. É ela que mais contribui para o ganho de massa.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>Recuperação e definição</summary>
+      <ul>
+        <li>A semana não tem dia de descanso, então sono e alimentação fazem a recuperação. Se a carga cair por dois treinos seguidos no mesmo exercício, tire um dia de folga.</li>
+        <li>A cada 6 a 8 semanas, faça uma semana com metade das séries e as mesmas cargas.</li>
+        <li>A definição vem principalmente da alimentação: proteína alta e calorias perto da manutenção. O cardio de segunda, quarta e sexta ajuda sem atrapalhar o ganho de massa.</li>
+      </ul>
+    </details>
+    <div class="ajustes">
+      <label><input type="checkbox" id="som"> Avisar com som no fim do descanso</label>
+      <button class="btn" id="limparDia" type="button">Limpar séries deste dia</button>
+      <button class="btn" id="apagarTudo" type="button">Apagar cargas e histórico</button>
+      <button class="btn" id="copiarBackup" type="button">Copiar backup</button>
+      <button class="btn" id="abrirRestaurar" type="button">Restaurar backup</button>
+      <div class="restaurar" id="restaurar" hidden>
+        <label for="backupTxt">Texto do backup</label>
+        <textarea id="backupTxt" rows="4" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+        <button class="btn" id="restaurarOk" type="button">Restaurar</button>
+      </div>
+      <p class="backup-msg" id="backupMsg" role="status"></p>
+    </div>
+    <p class="status">Cargas e séries ficam guardadas neste aparelho. Remover o app da Tela de Início apaga esses dados, então copie um backup de vez em quando e guarde em Notas.</p>
+  </section>
+</main>
+
+<div class="timer" id="timer" role="timer" hidden>
+  <span class="timer-fill" id="timerFill"></span>
+  <div>
+    <span class="timer-clock" id="timerClock">0:00</span>
+    <span class="timer-next" id="timerNext"></span>
+  </div>
+  <button type="button" id="mais15">+15 s</button>
+  <button type="button" id="pular">Pular</button>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- Programa de treino ---------- */
+var FOCOS = {
+  puxar:   "Costas e bíceps",
+  empurrar:"Peito e tríceps",
+  ombros:  "Ombros e trapézio",
+  pernas:  "Pernas, abdômen e lombar"
+};
+var R = " repetições";
+function ex(id,nome,series,alvo,desc,dica){ return {id:id,nome:nome,series:series,alvo:alvo,desc:desc,dica:dica}; }
+function cardio(){ return {id:"cardio",nome:"Cardio moderado",series:1,alvo:"20 minutos",desc:0,min:20,semCarga:true,
+  dica:"Esteira inclinada ou bicicleta, em um ritmo que ainda permita falar frases curtas."}; }
+
+var SEMANA = [
+  { foco:"puxar", nota:"Variação A, com cargas mais altas nos exercícios compostos.", grupos:[
+    { nome:"Costas", ex:[
+      ex("barra-fixa","Barra fixa pronada",4,"6 a 10"+R,120,"Pegada um pouco além dos ombros. Desça até estender os braços e suba levando o peito à barra. Se passar de 10, adicione lastro; se não chegar a 6, troque pela puxada frontal."),
+      ex("remada-curvada","Remada curvada com barra",3,"6 a 10"+R,120,"Tronco inclinado a uns 45°, coluna neutra. Puxe a barra em direção ao umbigo e segure um instante no alto."),
+      ex("serrote","Remada unilateral com halter",3,"8 a 12"+R+" por lado",90,"Mão e joelho apoiados no banco. Puxe o cotovelo para trás e para cima, rente ao corpo, sem girar o tronco."),
+      ex("puxada-triangulo","Puxada com triângulo",3,"10 a 12"+R,75,"Pegada neutra e fechada. Incline o tronco um pouco para trás e puxe o triângulo até a parte de cima do peito."),
+      ex("pulldown","Pulldown com braços estendidos",3,"12 a 15"+R,60,"Na polia alta, cotovelos quase travados. Leve a barra até as coxas contraindo o dorsal e volte devagar.")
+    ]},
+    { nome:"Bíceps", ex:[
+      ex("rosca-direta","Rosca direta com barra",3,"8 a 10"+R,90,"Cotovelos colados ao tronco, sem balançar o corpo. Desça em 2 a 3 segundos."),
+      ex("rosca-inclinada","Rosca alternada no banco inclinado",3,"10 a 12"+R+" por lado",75,"Banco a 45°, braços pendendo atrás do tronco para alongar o bíceps. Gire o punho para fora na subida."),
+      ex("rosca-martelo","Rosca martelo",3,"10 a 12"+R,60,"Palmas voltadas uma para a outra. Trabalha braquial e antebraço e dá espessura ao braço."),
+      ex("rosca-spider","Rosca spider no banco inclinado",2,"12 a 15"+R,60,"De bruços no banco a 45°, braços pendendo na vertical. Suba sem mover os cotovelos e contraia no alto."),
+      ex("rosca-inversa","Rosca inversa com barra",2,"12 a 15"+R,60,"Pegada pronada, palmas para baixo. Trabalha o braquiorradial e os extensores do antebraço; use carga moderada.")
+    ]},
+    { nome:"Para definição", ex:[cardio()] }
+  ]},
+  { foco:"empurrar", nota:"Variação A, com cargas mais altas nos exercícios compostos.", grupos:[
+    { nome:"Peito", ex:[
+      ex("supino-reto","Supino reto com barra",4,"6 a 10"+R,120,"Escápulas juntas e apoiadas no banco, pés firmes no chão. Desça a barra até a linha do peito e suba sem tirar o quadril do banco."),
+      ex("supino-incl-halter","Supino inclinado com halteres",3,"8 a 12"+R,90,"Banco a 30°. Desça até sentir o peito alongar e suba aproximando os halteres, sem batê-los."),
+      ex("paralelas","Paralelas com tronco inclinado",3,"8 a 12"+R,90,"Incline o tronco à frente e abra um pouco os cotovelos para enfatizar o peito. Adicione lastro se passar de 12."),
+      ex("crucifixo-reto","Crucifixo reto com halteres",3,"10 a 12"+R,75,"Cotovelos levemente flexionados e fixos. Abra até os halteres chegarem à linha do peito e feche como se abraçasse um tronco."),
+      ex("crossover-alto","Crossover na polia alta",3,"12 a 15"+R,60,"Um passo à frente, cotovelos levemente flexionados. Feche as mãos à frente do quadril e segure um segundo.")
+    ]},
+    { nome:"Tríceps", ex:[
+      ex("triceps-testa","Tríceps testa com barra W",3,"8 a 12"+R,90,"Cotovelos apontados para o teto, sem abrir. Desça a barra até atrás da testa e estenda por completo."),
+      ex("triceps-frances-halter","Tríceps francês com halter",3,"10 a 12"+R,75,"Sentado, um halter seguro com as duas mãos atrás da cabeça. Cotovelos apontados para cima e próximos das orelhas."),
+      ex("triceps-corda","Tríceps na polia com corda",3,"12 a 15"+R,60,"Cotovelos fixos ao lado do corpo. No fim do movimento, afaste as pontas da corda."),
+      ex("triceps-coice","Tríceps coice na polia",2,"12 a 15"+R+" por lado",45,"Tronco inclinado, braço paralelo ao chão. Estenda o cotovelo por completo e segure um segundo."),
+      ex("mergulho-banco","Mergulho no banco",2,"12 a 15"+R,60,"Mãos no banco atrás do corpo, pés em outro banco. Desça até os cotovelos chegarem a 90° e apoie uma anilha nas coxas quando ficar fácil.")
+    ]}
+  ]},
+  { foco:"ombros", nota:"Variação A, com ênfase na parte de trás do ombro.", grupos:[
+    { nome:"Ombros", ex:[
+      ex("desenv-halter","Desenvolvimento com halteres",4,"8 a 10"+R,120,"Sentado, encosto quase vertical. Desça até os halteres ficarem na altura das orelhas e suba sem travar os cotovelos."),
+      ex("elev-lateral","Elevação lateral com halteres",3,"12 a 15"+R,60,"Cotovelos levemente flexionados. Suba até a linha dos ombros conduzindo pelos cotovelos, sem impulso do tronco."),
+      ex("crucifixo-inverso","Crucifixo inverso com halteres",3,"12 a 15"+R,60,"Tronco inclinado, quase paralelo ao chão. Abra os braços para os lados para trabalhar a parte de trás do ombro."),
+      ex("face-pull","Face pull na polia",3,"12 a 15"+R,60,"Corda na altura do rosto. Puxe em direção à testa abrindo os cotovelos e girando as mãos para trás."),
+      ex("elev-frontal","Elevação frontal alternada com halteres",3,"10 a 12"+R+" por lado",60,"Suba um braço de cada vez até a altura dos olhos, sem balançar o tronco. Desça controlando.")
+    ]},
+    { nome:"Trapézio", ex:[
+      ex("encolh-barra","Encolhimento com barra",3,"10 a 12"+R,90,"Suba os ombros em linha reta em direção às orelhas e segure um segundo no alto. Não gire os ombros."),
+      ex("remada-alta","Remada alta com pegada aberta",3,"10 a 12"+R,75,"Pegada mais larga que os ombros. Puxe até a linha do peito com os cotovelos acima das mãos. Pare se sentir desconforto no ombro."),
+      ex("encolh-tras","Encolhimento com barra por trás",3,"10 a 12"+R,75,"Barra atrás do corpo, na altura dos glúteos. Suba os ombros para cima e levemente para trás; pega mais o trapézio médio."),
+      ex("fazendeiro","Caminhada do fazendeiro",2,"30 a 40 metros",75,"Um halter pesado em cada mão, ombros para trás e peito alto. Caminhe em passos curtos sem deixar os ombros caírem."),
+      ex("retracao-barra","Retração escapular na barra fixa",2,"10 a 12"+R,60,"Pendurado, braços estendidos. Sem dobrar os cotovelos, puxe as escápulas para baixo e para trás, elevando o corpo alguns centímetros.")
+    ]},
+    { nome:"Para definição", ex:[cardio()] }
+  ]},
+  { foco:"puxar", nota:"Variação B, com mais repetições e outros ângulos de puxada.", grupos:[
+    { nome:"Costas", ex:[
+      ex("puxada-aberta","Puxada frontal aberta",4,"10 a 12"+R,90,"Peito alto. Puxe a barra até a parte de cima do peito, levando os cotovelos para baixo e para trás."),
+      ex("remada-baixa","Remada baixa com triângulo",3,"10 a 12"+R,90,"Tronco firme, sem balançar. Puxe o triângulo até o abdômen e junte as escápulas."),
+      ex("cavalinho","Remada cavalinho",3,"8 a 12"+R,90,"Coluna neutra, joelhos flexionados. Puxe a carga até o peito e desça controlando."),
+      ex("puxada-supinada","Puxada com pegada supinada",3,"10 a 12"+R,75,"Mãos na largura dos ombros, palmas voltadas para você. Envolve mais o bíceps e a parte baixa do dorsal."),
+      ex("pullover","Pullover com halter",3,"12 a 15"+R,60,"Deitado atravessado no banco, cotovelos levemente flexionados. Desça o halter atrás da cabeça até alongar o dorsal e volte até a linha do peito.")
+    ]},
+    { nome:"Bíceps", ex:[
+      ex("rosca-scott","Rosca Scott com barra W",3,"10 a 12"+R,75,"Axilas encaixadas no apoio. Desça quase até estender e suba sem tirar os braços do banco."),
+      ex("rosca-polia","Rosca na polia baixa",3,"12 a 15"+R,60,"Tensão constante do início ao fim. Mantenha os cotovelos parados e contraia no alto."),
+      ex("rosca-concentrada","Rosca concentrada",3,"12 a 15"+R+" por lado",60,"Cotovelo apoiado na parte interna da coxa. Suba girando o punho para fora e contraia por um segundo."),
+      ex("martelo-corda","Rosca martelo na polia com corda",2,"12 a 15"+R,60,"Corda na polia baixa, palmas voltadas uma para a outra. Cotovelos parados ao lado do corpo."),
+      ex("rosca-21","Rosca 21 com barra W",2,"21"+R+" (7 + 7 + 7)",75,"Sete repetições da posição estendida até a metade, sete da metade até o alto e sete completas, sem descanso entre elas.")
+    ]}
+  ]},
+  { foco:"empurrar", nota:"Variação B, com mais repetições e ênfase na parte alta do peito.", grupos:[
+    { nome:"Peito", ex:[
+      ex("supino-incl-barra","Supino inclinado com barra",4,"8 a 10"+R,120,"Banco a 30°. Desça a barra até a parte alta do peito, com os cotovelos a uns 45° do tronco."),
+      ex("supino-reto-halter","Supino reto com halteres",3,"8 a 12"+R,90,"Amplitude maior que na barra: desça até alongar o peito e suba aproximando os halteres."),
+      ex("supino-declinado","Supino declinado",3,"8 a 12"+R,90,"Com barra ou na máquina. Desça até a parte baixa do peito, mantendo as escápulas juntas."),
+      ex("peck-deck","Voador (peck deck)",3,"12 a 15"+R,60,"Cotovelos na altura dos ombros. Feche contraindo o peito por um segundo e abra devagar."),
+      ex("crossover-baixo","Crossover na polia baixa",3,"12 a 15"+R,60,"De baixo para cima, com as mãos se encontrando na altura do queixo. Enfatiza a parte superior do peito.")
+    ]},
+    { nome:"Tríceps", ex:[
+      ex("supino-fechado","Supino fechado",3,"8 a 10"+R,90,"Mãos na largura dos ombros, cotovelos próximos ao tronco. Desça até a parte baixa do peito."),
+      ex("triceps-frances","Tríceps francês na polia",3,"10 a 12"+R,75,"De costas para a polia, corda atrás da cabeça. Estenda os cotovelos à frente mantendo os braços parados."),
+      ex("triceps-barra","Tríceps na polia com barra",3,"12 a 15"+R,60,"Na última série, ao chegar perto da falha, reduza a carga em um terço e continue até não conseguir mais."),
+      ex("triceps-invertido","Tríceps unilateral com pegada invertida",2,"12 a 15"+R+" por lado",45,"Na polia alta, palma voltada para cima. Cotovelo colado ao corpo; estenda por completo e segure um segundo."),
+      ex("flexao-diamante","Flexão diamante",2,"12 a 20"+R,60,"Mãos juntas sob o peito, formando um losango com polegares e indicadores. Cotovelos rentes ao corpo e corpo em linha reta.")
+    ]},
+    { nome:"Para definição", ex:[cardio()] }
+  ]},
+  { foco:"ombros", nota:"Variação B, com barra, polia e máquina no lugar dos halteres.", grupos:[
+    { nome:"Ombros", ex:[
+      ex("desenv-militar","Desenvolvimento militar com barra",4,"6 a 10"+R,120,"Em pé, abdômen e glúteos contraídos. Suba a barra em linha reta, passando rente ao rosto, sem arquear a lombar."),
+      ex("elev-lateral-polia","Elevação lateral na polia",3,"12 a 15"+R+" por lado",60,"Cabo passando por trás do corpo. A polia mantém a tensão desde o início do movimento."),
+      ex("arnold","Desenvolvimento Arnold",3,"10 a 12"+R,90,"Comece com as palmas voltadas para você e gire os punhos enquanto sobe."),
+      ex("crucifixo-inv-maquina","Crucifixo inverso na máquina",3,"12 a 15"+R,60,"Peito apoiado, braços na altura dos ombros. Abra até a linha do corpo sem encolher os ombros."),
+      ex("elev-frontal-anilha","Elevação frontal com anilha",3,"12 a 15"+R,60,"Segure a anilha pelas laterais e suba até a altura dos olhos com os braços quase estendidos.")
+    ]},
+    { nome:"Trapézio", ex:[
+      ex("encolh-halter","Encolhimento com halteres",3,"12 a 15"+R,75,"Halteres ao lado do corpo. Suba os ombros e segure dois segundos no alto."),
+      ex("encolh-smith","Encolhimento no Smith",3,"10 a 12"+R,75,"A barra guiada permite carga alta com segurança. Suba em linha reta e segure um segundo no alto."),
+      ex("elev-y","Elevação em Y no banco inclinado",3,"12 a 15"+R,60,"De bruços no banco a 45°, suba os braços em Y com os polegares para cima. Trabalha a parte inferior do trapézio; use carga leve."),
+      ex("remada-alta-corda","Remada alta na polia com corda",2,"12 a 15"+R,60,"Polia baixa. Puxe a corda até a altura do queixo, abrindo os cotovelos para cima e para os lados."),
+      ex("remada-aberta","Remada baixa com pegada aberta",2,"12 a 15"+R,60,"Barra reta na polia baixa, pegada larga. Puxe em direção ao peito com os cotovelos altos e junte as escápulas.")
+    ]}
+  ]},
+  { foco:"pernas", nota:"Único treino de pernas da semana, com mais séries nos exercícios principais.", grupos:[
+    { nome:"Pernas", ex:[
+      ex("agachamento","Agachamento livre",4,"6 a 10"+R,150,"Pés na largura dos ombros, coluna neutra. Desça pelo menos até as coxas ficarem paralelas ao chão."),
+      ex("leg-press","Leg press 45°",4,"10 a 12"+R,120,"Desça até onde a lombar continuar apoiada no encosto. Não trave os joelhos no alto."),
+      ex("stiff","Stiff com barra",4,"8 a 12"+R,120,"Joelhos levemente flexionados, quadril para trás e barra rente às pernas. Trabalha posteriores de coxa, glúteos e lombar."),
+      ex("flexora","Mesa flexora",3,"10 a 12"+R,75,"Quadril colado no apoio. Flexione até o fim e volte devagar."),
+      ex("panturrilha","Panturrilha em pé",4,"12 a 15"+R,45,"Amplitude total: desça alongando e suba o máximo possível, com pausa de um segundo no alto.")
+    ]},
+    { nome:"Lombar", ex:[
+      ex("ext-lombar","Extensão lombar no banco romano",3,"12 a 15"+R,60,"Suba até o tronco alinhar com as pernas, sem hiperestender. Segure uma anilha no peito quando ficar fácil."),
+      ex("bom-dia","Bom dia com barra",3,"10 a 12"+R,90,"Barra apoiada no trapézio, joelhos levemente flexionados. Leve o quadril para trás com a coluna neutra. Carga leve: a lombar já trabalhou no agachamento e no stiff.")
+    ]},
+    { nome:"Abdômen", ex:[
+      ex("elev-pernas","Elevação de pernas na barra",3,"12 a 15"+R,45,"Suba as pernas enrolando o quadril, sem balançar. Com os joelhos flexionados fica mais fácil."),
+      ex("abd-polia","Abdominal na polia com corda",3,"12 a 15"+R,45,"Ajoelhado, flexione a coluna levando os cotovelos em direção aos joelhos. O quadril fica parado."),
+      ex("prancha","Prancha",3,"45 a 60 segundos",45,"Corpo em linha reta, glúteos e abdômen contraídos. Não deixe o quadril cair.")
+    ]}
+  ]}
+];
+
+var DIAS  = ["Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado","Domingo"];
+var ABREV = ["seg","ter","qua","qui","sex","sáb","dom"];
+var MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+
+/* ---------- Datas ---------- */
+var agora = new Date();
+var idxHoje = (agora.getDay() + 6) % 7;
+var datas = SEMANA.map(function(_, i){
+  return new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() - idxHoje + i);
+});
+function chave(d){
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function exercicios(i){
+  var out = [];
+  SEMANA[i].grupos.forEach(function(g){ g.ex.forEach(function(e){ out.push(e); }); });
+  return out;
+}
+function tempoDesc(s){
+  if (s < 60) return s + " s";
+  var m = Math.floor(s/60), r = s % 60;
+  return m + " min" + (r ? " " + r + " s" : "");
+}
+
+/* ---------- Estado e armazenamento ---------- */
+var LS_ESTADO = "treino-semana-estado-v1";
+var LS_PREFS  = "treino-semana-prefs-v1";
+var state = { ts:0, cargas:{}, dias:{} };
+var prefs = { som:true };
+var sel = idxHoje;
+
+function normaliza(o){
+  var s = { ts:0, cargas:{}, dias:{} };
+  if (o && typeof o === "object") {
+    if (typeof o.ts === "number") s.ts = o.ts;
+    if (o.cargas && typeof o.cargas === "object") s.cargas = o.cargas;
+    if (o.dias && typeof o.dias === "object") s.dias = o.dias;
+  }
+  return s;
+}
+function leLocal(){
+  try { var r = localStorage.getItem(LS_ESTADO); if (r) state = normaliza(JSON.parse(r)); } catch(e){}
+  try { var p = localStorage.getItem(LS_PREFS); if (p) { var o = JSON.parse(p); if (o && typeof o.som === "boolean") prefs.som = o.som; } } catch(e){}
+}
+function gravaLocal(){ try { localStorage.setItem(LS_ESTADO, JSON.stringify(state)); } catch(e){} }
+function gravaPrefs(){ try { localStorage.setItem(LS_PREFS, JSON.stringify(prefs)); } catch(e){} }
+function poda(){
+  var lim = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() - 21);
+  var k = chave(lim);
+  Object.keys(state.dias).forEach(function(d){ if (d < k) delete state.dias[d]; });
+}
+
+function salvar(){
+  state.ts = Date.now();
+  poda();
+  gravaLocal();
+}
+
+/* ---------- Marcações ---------- */
+function marcas(i, e){
+  var d = state.dias[chave(datas[i])] || {};
+  var a = Array.isArray(d[e.id]) ? d[e.id] : [];
+  var out = [];
+  for (var j = 0; j < e.series; j++) out.push(a[j] ? 1 : 0);
+  return out;
+}
+function totais(i){
+  var feito = 0, total = 0;
+  exercicios(i).forEach(function(e){
+    total += e.series;
+    marcas(i, e).forEach(function(v){ feito += v; });
+  });
+  return { feito:feito, total:total };
+}
+function proxima(i){
+  var lista = exercicios(i);
+  for (var k = 0; k < lista.length; k++) {
+    var m = marcas(i, lista[k]);
+    for (var j = 0; j < m.length; j++) {
+      if (!m[j]) return lista[k].series > 1 ? lista[k].nome + ", série " + (j+1) : lista[k].nome;
+    }
+  }
+  return "";
+}
+
+/* ---------- Interface ---------- */
+function el(tag, attrs, filhos){
+  var n = document.createElement(tag);
+  if (attrs) Object.keys(attrs).forEach(function(k){
+    if (k === "text") n.textContent = attrs[k];
+    else if (k === "class") n.className = attrs[k];
+    else n.setAttribute(k, attrs[k]);
+  });
+  (filhos || []).forEach(function(f){ if (f) n.appendChild(f); });
+  return n;
+}
+var app = document.getElementById("app");
+var week = document.getElementById("week");
+var listaEl = document.getElementById("lista");
+var timerEl = document.getElementById("timer");
+var botoesDia = [];
+
+function montaSemana(){
+  SEMANA.forEach(function(t, i){
+    var b = el("button", {
+      "class":"dia" + (i === idxHoje ? " hoje" : ""),
+      "type":"button",
+      "data-foco":t.foco,
+      "data-i":String(i),
+      "aria-label":DIAS[i] + ", " + FOCOS[t.foco].toLowerCase(),
+      "style":"--i:" + i
+    }, [
+      el("span", {"class":"plate"}, [ el("b", {text:String(datas[i].getDate())}) ]),
+      el("span", {"class":"dia-nome", text: i === idxHoje ? "hoje" : ABREV[i]})
+    ]);
+    b.addEventListener("click", function(){ sel = i; desenhaDia(); atualizaSemana(); });
+    botoesDia.push(b);
+    week.appendChild(b);
+  });
+}
+function atualizaSemana(){
+  botoesDia.forEach(function(b, i){
+    var t = totais(i);
+    b.style.setProperty("--p", String(Math.round(100 * t.feito / t.total)));
+    b.classList.toggle("feito", t.feito === t.total);
+    b.setAttribute("aria-current", i === sel ? "true" : "false");
+  });
+}
+function atualizaProgresso(){
+  var t = totais(sel);
+  document.getElementById("barra").style.setProperty("--w", (100 * t.feito / t.total) + "%");
+  document.getElementById("progresso").textContent = t.feito === t.total
+    ? "Treino concluído, " + t.total + " de " + t.total + " séries."
+    : t.feito + " de " + t.total + " séries feitas";
+  atualizaSemana();
+}
+function desenhaDia(){
+  var t = SEMANA[sel], d = datas[sel], lista = exercicios(sel);
+  app.setAttribute("data-foco", t.foco);
+  timerEl.setAttribute("data-foco", t.foco);
+  document.getElementById("quando").textContent = DIAS[sel] + ", " + d.getDate() + " de " + MESES[d.getMonth()];
+  document.getElementById("titulo").textContent = FOCOS[t.foco];
+
+  var seg = 0, series = 0;
+  lista.forEach(function(e){
+    if (e.min) seg += e.min * 60; else { seg += e.series * (e.desc + 45); series += e.series; }
+  });
+  var min = Math.round(seg / 300) * 5;
+  document.getElementById("meta").textContent = t.nota + " São " + lista.length + " exercícios e " + series + " séries, em cerca de " + min + " minutos.";
+
+  listaEl.textContent = "";
+  var n = 0;
+  t.grupos.forEach(function(g){
+    listaEl.appendChild(el("h3", {"class":"grupo", text:g.nome}));
+    var ol = el("ol", {"class":"lista"});
+    g.ex.forEach(function(e){
+      n++;
+      var m = marcas(sel, e);
+      var meta = e.series > 1
+        ? e.series + " séries de " + e.alvo + ", descanso de " + tempoDesc(e.desc)
+        : e.alvo + ", depois da musculação";
+
+      var sets = el("div", {"class":"sets", "role":"group", "aria-label":"Séries de " + e.nome});
+      m.forEach(function(v, j){
+        sets.appendChild(el("button", {
+          "class":"set" + (e.series === 1 ? " unica" : ""),
+          "type":"button",
+          "aria-pressed": v ? "true" : "false",
+          "aria-label": e.series === 1 ? e.nome + " feito" : "Série " + (j+1) + " de " + e.nome,
+          "data-ex": e.id,
+          "data-s": String(j),
+          text: e.series === 1 ? "Feito" : String(j+1)
+        }));
+      });
+
+      var carga = null;
+      if (!e.semCarga) {
+        var inp = el("input", {
+          "type":"text", "inputmode":"decimal", "maxlength":"6", "placeholder":"0",
+          "autocomplete":"off", "data-carga":e.id, "aria-label":"Carga em quilos, " + e.nome
+        });
+        inp.value = state.cargas[e.id] != null ? String(state.cargas[e.id]) : "";
+        carga = el("label", {"class":"load"}, [ inp, el("span", {text:"kg"}) ]);
+      }
+
+      ol.appendChild(el("li", {"class":"ex"}, [
+        el("div", {"class":"ex-head"}, [
+          el("span", {"class":"ex-n", "aria-hidden":"true", text:String(n)}),
+          el("div", null, [
+            el("h4", {"class":"ex-nome", text:e.nome}),
+            el("p", {"class":"ex-meta", text:meta})
+          ])
+        ]),
+        el("div", {"class":"ex-work"}, [ carga, sets ]),
+        el("details", null, [
+          el("summary", {text:"Como executar"}),
+          el("p", {text:e.dica})
+        ])
+      ]));
+    });
+    listaEl.appendChild(ol);
+  });
+  atualizaProgresso();
+}
+
+function achaEx(id){
+  var lista = exercicios(sel);
+  for (var k = 0; k < lista.length; k++) if (lista[k].id === id) return lista[k];
+  return null;
+}
+listaEl.addEventListener("click", function(ev){
+  var b = ev.target.closest ? ev.target.closest(".set") : null;
+  if (!b) return;
+  var e = achaEx(b.getAttribute("data-ex"));
+  if (!e) return;
+  var j = Number(b.getAttribute("data-s"));
+  var k = chave(datas[sel]);
+  var m = marcas(sel, e);
+  m[j] = m[j] ? 0 : 1;
+  if (!state.dias[k]) state.dias[k] = {};
+  state.dias[k][e.id] = m;
+  b.setAttribute("aria-pressed", m[j] ? "true" : "false");
+  salvar();
+  atualizaProgresso();
+  if (m[j]) {
+    preparaSom();
+    var t = totais(sel);
+    if (t.feito === t.total) fechaTimer();
+    else if (e.desc > 0) iniciaTimer(e.desc);
+  }
+});
+listaEl.addEventListener("input", function(ev){
+  var id = ev.target.getAttribute && ev.target.getAttribute("data-carga");
+  if (!id) return;
+  var v = ev.target.value.replace(/[^0-9.,]/g, "").slice(0, 6);
+  if (v !== ev.target.value) ev.target.value = v;
+  if (v) state.cargas[id] = v; else delete state.cargas[id];
+  salvar();
+});
+
+/* ---------- Cronômetro de descanso ---------- */
+var fimEm = 0, totalSeg = 0, tick = null, some = null, audio = null;
+function preparaSom(){
+  if (!prefs.som) return;
+  try {
+    if (!audio) { var AC = window.AudioContext || window.webkitAudioContext; if (AC) audio = new AC(); }
+    if (audio && audio.state === "suspended") audio.resume();
+  } catch(e){}
+}
+function apita(){
+  try { if (navigator.vibrate) navigator.vibrate([200,100,200]); } catch(e){}
+  if (!prefs.som || !audio) return;
+  try {
+    [0, 0.28].forEach(function(at){
+      var t = audio.currentTime + at, o = audio.createOscillator(), g = audio.createGain();
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.3, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      o.connect(g); g.connect(audio.destination);
+      o.start(t); o.stop(t + 0.25);
+    });
+  } catch(e){}
+}
+var trava = null;
+function seguraTela(){
+  try {
+    if (navigator.wakeLock && !trava) navigator.wakeLock.request("screen").then(function(l){
+      trava = l;
+      l.addEventListener("release", function(){ trava = null; });
+    }, function(){});
+  } catch(e){}
+}
+function soltaTela(){ try { if (trava) trava.release(); } catch(e){} trava = null; }
+function iniciaTimer(seg){
+  clearInterval(tick); clearTimeout(some);
+  seguraTela();
+  totalSeg = seg;
+  fimEm = Date.now() + seg * 1000;
+  timerEl.classList.remove("fim");
+  timerEl.hidden = false;
+  document.body.classList.add("com-timer");
+  var p = proxima(sel);
+  document.getElementById("timerNext").textContent = p ? "Depois: " + p : "Descanso";
+  document.getElementById("mais15").hidden = false;
+  document.getElementById("pular").textContent = "Pular";
+  pinta();
+  tick = setInterval(pinta, 250);
+}
+function pinta(){
+  var resta = Math.max(0, Math.ceil((fimEm - Date.now()) / 1000));
+  document.getElementById("timerClock").textContent = Math.floor(resta/60) + ":" + String(resta % 60).padStart(2,"0");
+  document.getElementById("timerFill").style.setProperty("--w", Math.min(100, 100 * (fimEm - Date.now()) / (totalSeg * 1000)) + "%");
+  if (resta <= 0) {
+    clearInterval(tick); tick = null;
+    timerEl.classList.add("fim");
+    var p = proxima(sel);
+    document.getElementById("timerNext").textContent = p ? "Agora: " + p : "Descanso encerrado";
+    document.getElementById("mais15").hidden = true;
+    document.getElementById("pular").textContent = "Fechar";
+    apita();
+    some = setTimeout(fechaTimer, 12000);
+  }
+}
+function fechaTimer(){
+  clearInterval(tick); clearTimeout(some); tick = null;
+  soltaTela();
+  timerEl.hidden = true;
+  document.body.classList.remove("com-timer");
+}
+document.getElementById("mais15").addEventListener("click", function(){
+  fimEm += 15000; totalSeg += 15; pinta();
+});
+document.getElementById("pular").addEventListener("click", fechaTimer);
+
+/* ---------- Ajustes ---------- */
+var chkSom = document.getElementById("som");
+chkSom.addEventListener("change", function(){ prefs.som = chkSom.checked; gravaPrefs(); if (prefs.som) preparaSom(); });
+
+function doisToques(btn, textoConfirma, acao){
+  var original = btn.textContent, t = null;
+  btn.addEventListener("click", function(){
+    if (btn.classList.contains("confirma")) {
+      clearTimeout(t);
+      btn.classList.remove("confirma");
+      btn.textContent = original;
+      acao();
+    } else {
+      btn.classList.add("confirma");
+      btn.textContent = textoConfirma;
+      t = setTimeout(function(){ btn.classList.remove("confirma"); btn.textContent = original; }, 4000);
+    }
+  });
+}
+doisToques(document.getElementById("limparDia"), "Toque de novo para limpar", function(){
+  delete state.dias[chave(datas[sel])];
+  salvar(); fechaTimer(); desenhaDia();
+});
+doisToques(document.getElementById("apagarTudo"), "Toque de novo para apagar tudo", function(){
+  state.cargas = {}; state.dias = {};
+  salvar(); fechaTimer(); desenhaDia();
+});
+
+/* ---------- Início ---------- */
+leLocal();
+chkSom.checked = prefs.som;
+montaSemana();
+desenhaDia();
+
+/* ---------- Backup ---------- */
+var backupMsg = document.getElementById("backupMsg");
+var restaurarEl = document.getElementById("restaurar");
+var backupTxt = document.getElementById("backupTxt");
+document.getElementById("copiarBackup").addEventListener("click", function(){
+  var texto = JSON.stringify(state);
+  function manual(){
+    restaurarEl.hidden = false;
+    backupTxt.value = texto;
+    try { backupTxt.focus(); backupTxt.select(); } catch(e){}
+    backupMsg.textContent = "Copie o texto abaixo e guarde em Notas.";
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(texto).then(function(){
+      backupMsg.textContent = "Backup copiado. Cole em Notas para guardar.";
+    }, manual);
+  } else manual();
+});
+document.getElementById("abrirRestaurar").addEventListener("click", function(){
+  restaurarEl.hidden = !restaurarEl.hidden;
+  backupMsg.textContent = restaurarEl.hidden ? "" : "Cole o texto do backup e toque em Restaurar.";
+});
+document.getElementById("restaurarOk").addEventListener("click", function(){
+  var o = null;
+  try { o = JSON.parse(backupTxt.value); } catch(e){}
+  if (!o || typeof o !== "object" || typeof o.cargas !== "object" || typeof o.dias !== "object") {
+    backupMsg.textContent = "Esse texto não é um backup válido. Cole o texto inteiro, sem alterar.";
+    return;
+  }
+  state = normaliza(o);
+  salvar(); fechaTimer(); desenhaDia();
+  backupTxt.value = "";
+  restaurarEl.hidden = true;
+  backupMsg.textContent = "Backup restaurado.";
+});
+
+/* ---------- Instalação e uso sem internet ---------- */
+var instalado = navigator.standalone === true ||
+  (window.matchMedia ? window.matchMedia("(display-mode: standalone)").matches : false);
+var avisoVisto = false;
+try { avisoVisto = localStorage.getItem("treino-semana-aviso") === "1"; } catch(e){}
+var instalarEl = document.getElementById("instalar");
+if (!instalado && !avisoVisto) instalarEl.hidden = false;
+document.getElementById("fecharInstalar").addEventListener("click", function(){
+  instalarEl.hidden = true;
+  try { localStorage.setItem("treino-semana-aviso", "1"); } catch(e){}
+});
+if ("serviceWorker" in navigator && typeof location !== "undefined" && location.protocol === "https:") {
+  navigator.serviceWorker.register("./sw.js").catch(function(){});
+}
+})();
+</script>
+</body>
+</html>
